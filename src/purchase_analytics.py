@@ -1,13 +1,13 @@
 import os
 import csv
 import math
+from sys import argv
 
 
-# input files path
-data_dir = 'C:\\Users\\nepal\\Desktop\\InsightDE\\repo\\input'
-input_opt = data_dir + '\order_products__train.csv'
-input_p = data_dir + '\products.csv'
-
+# input and output files path
+input_opt = argv[1]
+input_p = argv[2]
+outfile = argv[3]
 
 
 # loads data from two different input files
@@ -49,7 +49,7 @@ class DataPrep:
             product_department[pid] = did
         return product_department
     
-    def combined_input(self):
+    def combine_inputs(self):
         # final input table (python dict) 
         data_table = {'department_id': [], 'order_id': [], 'product_id': [], 'reordered': []}
         
@@ -57,8 +57,8 @@ class DataPrep:
         product_department_map = self.create_product_department_map()
         
         # cross checking each column has equal entry or not
-        assert len(data.order_products['product_id']) == len(data.order_products['reordered'])
-        assert len(data.order_products['reordered']) == len(data.order_products['order_id'])
+        assert len(self.order_products['product_id']) == len(self.order_products['reordered'])
+        assert len(self.order_products['reordered']) == len(self.order_products['order_id'])
         
         # populating data_table
         for oid, pid, re in zip(self.order_products['order_id'], self.order_products['product_id'], self.order_products['reordered']):
@@ -134,7 +134,6 @@ class Analytics:
                     arr[j][1], arr[j+1][1] = arr[j+1][1], arr[j][1]
         return arr
                     
-    
     def sort_by_department(self, report):
         # sorting by department_id
         department_ids = [[index, did] for index, did in enumerate(report['department_id'])]
@@ -149,36 +148,33 @@ class Analytics:
                              report['number_of_first_orders'][index], report['percentage'][index]])
         return report_array
                 
-    def create_ouput_file(self, report_array):
-        out_dir = 'C:\\Users\\nepal\\Desktop\\InsightDE\\repo\\output'
-        with open(out_dir + '\\report.csv', mode='w') as file:
-            
+    def create_ouput_file(self, report_array, outfile):
+        with open(outfile, mode='w') as file:
             writer = csv.DictWriter(file, fieldnames=['department_id', 'number_of_orders', 
                                                           'number_of_first_orders', 'percentage'])
             writer.writeheader()
             for row in report_array:
-                writer.writerow({'department_id': row[0], 'number_of_orders': row[1],
-                                 'number_of_first_orders': row[2], 'percentage': row[3]})
+                writer.writerow({'department_id': row[0], 'number_of_orders': row[1], 'number_of_first_orders': row[2], 'percentage': row[3]})
         file.close()
-        print('Report file created!')
 
-# data preparation
-data = DataPrep(input_opt, input_p)
-# load both the data files
-data.load_order_product()
-data.load_products()
-# combining the input data into a single table
-table = data.combined_input()
 
-# analytics and creating report
-analyse = Analytics(table)
-report = analyse.create_report()
-sorted_report = analyse.sort_by_department(report)
-# creating the output file
-analyse.create_ouput_file(sorted_report)
+# running the data preparation and analytics
+def main(input_opt, input_p, outfile):
+    # data preparation
+    data = DataPrep(input_opt, input_p)
+    # load both the data files
+    data.load_order_product()
+    data.load_products()
+    # combining the input data into a single table
+    table = data.combine_inputs()
 
-count = 0
-for row in sorted_report:
-    print(row)
-    count += row[1]
-print('total entries: ', count)
+    # analytics and creating report
+    analyse = Analytics(table)
+    report = analyse.create_report()
+    sorted_report = analyse.sort_by_department(report)
+    # creating the output file
+    analyse.create_ouput_file(sorted_report, outfile)
+
+
+if __name__ == "__main__":
+    main(input_opt, input_p, outfile)
