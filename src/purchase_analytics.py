@@ -1,30 +1,34 @@
+# standard libraries
 import os
 import csv
-import math
 from sys import argv
 
 
 # input and output files path
-input_opt = argv[1]
-input_p = argv[2]
+order_products_path = argv[1]
+products_path = argv[2]
 outfile = argv[3]
 
 
-# loads data from two different input files
-# combines them and return a single data dictionary
 class DataPrep:
+    '''
+       loads data from two different input files: joined with department_id column
+       combines them and return a single data dictionary
+    '''
     
-    def __init__(self, order_prod_path, product_path):
+    def __init__(self, order_products_path, products_path):
+        '''few initializations'''
         # input data files path
-        self.order_prod_path = order_prod_path
-        self.product_path = product_path
+        self.order_products_path = order_products_path
+        self.products_path = products_path
         
-        # initiazing two input files dict
+        # initiazing two input dictionaries (formatted)
         self.order_products = {'order_id': [], 'product_id': [], 'reordered': []}
         self.products = {'product_id': [], 'department_id': []}
     
     def load_order_product(self):
-        with open(self.order_prod_path, mode='r') as csv_file:
+        '''loads order_products input file'''
+        with open(self.order_products_path, mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 self.order_products['order_id'].append(row['order_id'])
@@ -33,7 +37,8 @@ class DataPrep:
                 
                 
     def load_products(self):
-        with open(self.product_path, mode='r', encoding='utf8') as csv_file:
+        '''loads the product input file'''
+        with open(self.products_path, mode='r', encoding='utf8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 self.products['product_id'].append(row['product_id'])
@@ -41,22 +46,26 @@ class DataPrep:
                     
     
     def create_product_department_map(self):
+        '''creates a dict map between product_id and department_id'''
         product_department = dict()
         if self.products is None:
-            raise Exception('products dictionary not created yet!')
+            raise ValueError('products input file is not read yet!')
             
         for pid, did in zip(self.products['product_id'], self.products['department_id']):
             product_department[pid] = did
         return product_department
     
     def combine_inputs(self):
-        # final input table (python dict) 
+        '''join two input tables based on product_id
+           returns the combined table as a dict
+        '''
+        # storing combined data files into data_table dictionary
         data_table = {'department_id': [], 'order_id': [], 'product_id': [], 'reordered': []}
         
-        # hash map:= {product_id: department_id}
+        # product->department map:= {product_id: department_id}
         product_department_map = self.create_product_department_map()
         
-        # cross checking each column has equal entry or not
+        # checking whether each column has equal number of entry or not
         assert len(self.order_products['product_id']) == len(self.order_products['reordered'])
         assert len(self.order_products['reordered']) == len(self.order_products['order_id'])
         
@@ -72,14 +81,16 @@ class DataPrep:
 class Analytics:
     
     def __init__(self, table):
+        '''initializing input combined data table and  formatted output'''
         self.table = table  # its combined table of two input files
-        # formatting report table as: dictionary of dictionaries or map of has tables
+        # formatting output report table as: dictionary of dictionaries.
         self.output_table = {'department_id': {'number_of_orders': list(), 
                                                'number_of_first_orders': list(), 
                                                'percentage': None}
                             }
     
     def create_report(self):
+        '''use the combined input file: creates the report'''
         for did, re in zip(self.table['department_id'], self.table['reordered']):
 
             if did not in self.output_table.keys():
@@ -109,7 +120,8 @@ class Analytics:
                                  'number_of_first_orders': sum(self.output_table[key]['number_of_first_orders']),
                                  'percentage': round(sum(self.output_table[key]['number_of_first_orders']) / \
                                                      sum(self.output_table[key]['number_of_orders']), 2)}
-            
+        
+        # creating final report: as a dictionary with columns of required report 
         report = {'department_id': [], 'number_of_orders': [], 'number_of_first_orders': [], 'percentage': []}
         for key in self.output_table.keys():
             report['department_id'].append(int(key))
@@ -119,27 +131,29 @@ class Analytics:
     
         return report
                     
-    # bubble sorting O(n^2)
-    # can be used better sorting O(nlog(n))
-    # but since its it's about sorting just about 20 rows: I am using bubble sort
-    def bubble_sort(self, arr):
-        # arr = list of [index, department_id]
-        n = len(arr)  
+    def bubble_sort(self, report):
+        '''
+           helper function for sorting
+           bubble sorting O(n^2): Used to sort report based on department_id
+           can be used better sorting O(nlog(n)): used bubble sort for small # of  departments
+        '''
+        # report = list of lists: [index, department_id]
+        n = len(report)  
         for i in range(n): 
             # Last i elements are already in place 
             for j in range(0, n-i-1): 
-                # Swap if the element found is greater than the next element 
-                if arr[j][1] > arr[j+1][1] : 
-                    arr[j][0], arr[j+1][0] = arr[j+1][0], arr[j][0]
-                    arr[j][1], arr[j+1][1] = arr[j+1][1], arr[j][1]
-        return arr
+                # swap if the element found is greater than the next element 
+                if report[j][1] > report[j+1][1] : 
+                    report[j][0], report[j+1][0] = report[j+1][0], report[j][0]
+                    report[j][1], report[j+1][1] = report[j+1][1], report[j][1]
+        return report
                     
     def sort_by_department(self, report):
-        # sorting by department_id
+        '''sorts the report created by department_id'''
         department_ids = [[index, did] for index, did in enumerate(report['department_id'])]
         sortedby_dids = self.bubble_sort(department_ids)
         sortby_indices = [sortedby_dids[i][0] for i in range(len(sortedby_dids))]
-        # preparing sorted array
+        # preparing sorted report: returning as a list[lists]
         report_array = []
         for index in sortby_indices:
             # checking if number_of_orders > 0. Otherwise, skipping the department listing.
@@ -149,6 +163,7 @@ class Analytics:
         return report_array
                 
     def create_ouput_file(self, report_array, outfile):
+        '''takes required report list: saves into a csv file at outfile.'''
         with open(outfile, mode='w') as file:
             writer = csv.DictWriter(file, fieldnames=['department_id', 'number_of_orders', 
                                                           'number_of_first_orders', 'percentage'])
@@ -159,9 +174,9 @@ class Analytics:
 
 
 # running the data preparation and analytics
-def main(input_opt, input_p, outfile):
+def main(order_products_path, products_path, outfile):
     # data preparation
-    data = DataPrep(input_opt, input_p)
+    data = DataPrep(order_products_path, products_path)
     # load both the data files
     data.load_order_product()
     data.load_products()
@@ -177,4 +192,4 @@ def main(input_opt, input_p, outfile):
 
 
 if __name__ == "__main__":
-    main(input_opt, input_p, outfile)
+    main(order_products_path, products_path, outfile)

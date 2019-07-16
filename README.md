@@ -1,11 +1,11 @@
 # Purchase-Analytics
 
-This project is done as a part of the Insight Data Engineering coding challenge. 
+This project is done as a part of the *Insight Data Engineering* coding challenge. 
 
 ## Problem
 Here, we use the [Instacart dataset](https://www.instacart.com/datasets/grocery-shopping-2017) containing 3 million Instacart orders.
 
-This repo process the input dataset and calculate, for each department, the number of times a product was requested, number of times a product was requested for the first time and a ratio of those two numbers.
+Process the input dataset and calculate, for each department, the number of times a product was requested, number of times a product was requested for the first time and a ratio of those two numbers.
 
 
 ## Input Datasets
@@ -27,7 +27,7 @@ order_id,product_id,add_to_cart_order,reordered
 4,46842,1,0
 ```
 
-where
+where,
 
 * `order_id`: unique identifier of order
 * `product_id`: unique identifier of product
@@ -48,7 +48,7 @@ product_id,product_name,aisle_id,department_id
 46667,Organic Ginger Root,83,4
 46842,Plain Pre-Sliced Bagels,93,3
 ```
-where
+where,
 
 * `product_id`: unique identifier of the product
 * `product_name`: name of the product
@@ -84,10 +84,20 @@ department_id,number_of_orders,number_of_first_orders,percentage
 - `percentage` should be rounded to the second decimal
 
 
-## Running the code and unit tests
+## Run
 
 This program can be run with following command in the main directory:
+
 ```Purchase-Analytics~$ ./run.sh```
 
 Also, unit tests can be run with:
+
 ```insight_testsuite~$ ./run_tests.sh```
+
+### Submitted By
+Rabindra Nepal
+
+*Email:nepalrabindra9@gmail.com*
+
+
+
