@@ -38,7 +38,7 @@ class DataPrep:
                 
     def load_products(self):
         '''loads the product input file'''
-        with open(self.products_path, mode='r', encoding='utf8') as csv_file:
+        with open(self.products_path, mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 self.products['product_id'].append(row['product_id'])
