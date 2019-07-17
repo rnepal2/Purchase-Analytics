@@ -28,7 +28,7 @@ class DataPrep:
     
     def load_order_product(self):
         '''loads order_products input file'''
-        with open(self.order_products_path, 'r', newline='') as csv_file:
+        with open(self.order_products_path, 'r') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
                 self.order_products['order_id'].append(row['order_id'])
@@ -39,7 +39,7 @@ class DataPrep:
                 
     def load_products(self):
         '''loads the product input file'''
-        with open(self.products_path, 'r', newline='', encoding='utf-8') as csv_file:
+        with open(self.products_path, 'r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
                 self.products['product_id'].append(row['product_id'])
@@ -177,7 +177,7 @@ class Analytics:
                 
     def create_ouput_file(self, report_array, outfile):
         '''takes required sorted report array: writes into a csv file.'''
-        with open(outfile, 'w', newline='') as csv_file:
+        with open(outfile, 'w') as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=['department_id', 'number_of_orders', 
                                                           'number_of_first_orders', 'percentage'])
             writer.writeheader()
