@@ -1,5 +1,4 @@
 # standard libraries
-import os
 import csv
 from sys import argv
 
@@ -23,26 +22,29 @@ class DataPrep:
         self.products_path = products_path
         
         # initiazing two input dictionaries (formatted)
+        # each columns are stored in a list of the dictionary
         self.order_products = {'order_id': [], 'product_id': [], 'reordered': []}
         self.products = {'product_id': [], 'department_id': []}
     
     def load_order_product(self):
         '''loads order_products input file'''
-        with open(self.order_products_path, mode='r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
+        with open(self.order_products_path, 'r', newline='') as csv_file:
+            csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
                 self.order_products['order_id'].append(row['order_id'])
                 self.order_products['product_id'].append(row['product_id'])
                 self.order_products['reordered'].append(row['reordered'])
+        csv_file.close()
                 
                 
     def load_products(self):
         '''loads the product input file'''
-        with open(self.products_path, mode='r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
+        with open(self.products_path, 'r', newline='', encoding='utf-8') as csv_file:
+            csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
                 self.products['product_id'].append(row['product_id'])
                 self.products['department_id'].append(row['department_id'])
+        csv_file.close()
                     
     
     def create_product_department_map(self):
@@ -51,16 +53,16 @@ class DataPrep:
         if self.products is None:
             raise ValueError('products input file is not read yet!')
             
-        for pid, did in zip(self.products['product_id'], self.products['department_id']):
-            product_department[pid] = did
+        for prod_id, depart_id in zip(self.products['product_id'], self.products['department_id']):
+            product_department[prod_id] = depart_id
         return product_department
     
-    def combine_inputs(self):
-        '''join two input tables based on product_id
+    def join_inputs(self):
+        '''join two input tables based on matchinng product_id
            returns the combined table as a dict
         '''
-        # storing combined data files into data_table dictionary
-        data_table = {'department_id': [], 'order_id': [], 'product_id': [], 'reordered': []}
+        # storing combined data files into joined_table dictionary
+        joined_table = {'department_id': [], 'order_id': [], 'product_id': [], 'reordered': []}
         
         # product->department map:= {product_id: department_id}
         product_department_map = self.create_product_department_map()
@@ -69,65 +71,76 @@ class DataPrep:
         assert len(self.order_products['product_id']) == len(self.order_products['reordered'])
         assert len(self.order_products['reordered']) == len(self.order_products['order_id'])
         
-        # populating data_table
-        for oid, pid, re in zip(self.order_products['order_id'], self.order_products['product_id'], self.order_products['reordered']):
-            data_table['department_id'].append(product_department_map[pid])
-            data_table['order_id'].append(oid)
-            data_table['product_id'].append(pid)
-            data_table['reordered'].append(re)
-        return data_table
+        # populating joined_table
+        for order_id, prod_id, reord in zip(self.order_products['order_id'], self.order_products['product_id'], self.order_products['reordered']):
+            joined_table['department_id'].append(product_department_map[prod_id])
+            joined_table['order_id'].append(order_id)
+            joined_table['product_id'].append(prod_id)
+            joined_table['reordered'].append(reord)
+        return joined_table
 
 
 class Analytics:
     
-    def __init__(self, table):
-        '''initializing input combined data table and  formatted output'''
-        self.table = table  # its combined table of two input files
-        # formatting output report table as: dictionary of dictionaries.
-        self.output_table = {'department_id': {'number_of_orders': list(), 
-                                               'number_of_first_orders': list(), 
-                                               'percentage': None}
-                            }
+    def __init__(self, joined_table):
+        '''initialize with: joined_table from DataPrep'''
+        self.joined_table = joined_table  
+
     
     def create_report(self):
         '''use the combined input file: creates the report'''
-        for did, re in zip(self.table['department_id'], self.table['reordered']):
-
-            if did not in self.output_table.keys():
-                if re == '0':
-                    self.output_table[did] = {'number_of_orders': [1],
-                                         'number_of_first_orders': [1],
-                                         'percentage': 0}
-                if re == '1':
-                    self.output_table[did] = {'number_of_orders': [1],
-                                         'number_of_first_orders': [0],
-                                         'percentage': 0}
-
-            else: #if did in self.output_table.keys():
-                if re == '0':
-                    self.output_table[did]['number_of_orders'].append(1)
-                    self.output_table[did]['number_of_first_orders'].append(1),
-                if re == '1':
-                    self.output_table[did]['number_of_orders'].append(1)
-                    self.output_table[did]['number_of_first_orders'].append(0)
+        # formatting output report table as: dictionary of dictionaries.
+        report_dict =  {'department_id': {
+                                            'number_of_orders': list(), 
+                                            'number_of_first_orders': list(), 
+                                            'percentage': None
+                                         }
+                       }
+        for depart_id, reord in zip(self.joined_table['department_id'], self.joined_table['reordered']):
+            if depart_id not in report_dict.keys():
+                if reord == '0':
+                    # just initializing percentage: will calculate later after populating 
+                    # all the records into report_dict
+                    report_dict[depart_id] = {
+                                              'number_of_orders': [1],
+                                              'number_of_first_orders': [1],
+                                              'percentage': 0
+                                             }
+                if reord == '1':
+                    report_dict[depart_id] = {
+                                              'number_of_orders': [1],
+                                              'number_of_first_orders': [0],
+                                              'percentage': 0
+                                             }
+            else: 
+                if reord == '0':
+                    report_dict[depart_id]['number_of_orders'].append(1)
+                    report_dict[depart_id]['number_of_first_orders'].append(1),
+                if reord == '1':
+                    report_dict[depart_id]['number_of_orders'].append(1)
+                    report_dict[depart_id]['number_of_first_orders'].append(0)
                     
         # delete the first entry: used for formatting output (not a real entry)
-        del self.output_table['department_id']
+        del report_dict['department_id']
         
-        # summing up order numbers and first time order numbers
-        for key in self.output_table.keys():
-            self.output_table[key] = {'number_of_orders': sum(self.output_table[key]['number_of_orders']),
-                                 'number_of_first_orders': sum(self.output_table[key]['number_of_first_orders']),
-                                 'percentage': round(sum(self.output_table[key]['number_of_first_orders']) / \
-                                                     sum(self.output_table[key]['number_of_orders']), 2)}
+        # summing up reordered numbers-> to get first time order numbers
+        for key in report_dict.keys():
+            number_of_orders = sum(report_dict[key]['number_of_orders'])
+            number_of_first_orders = sum(report_dict[key]['number_of_first_orders'])
+            percentage = round(number_of_first_orders / number_of_orders, 2)
+            report_dict[key] = {
+                                 'number_of_orders': number_of_orders,
+                                 'number_of_first_orders': number_of_first_orders,
+                                 'percentage': percentage
+                                }
         
         # creating final report: as a dictionary with columns of required report 
         report = {'department_id': [], 'number_of_orders': [], 'number_of_first_orders': [], 'percentage': []}
-        for key in self.output_table.keys():
+        for key in report_dict.keys():
             report['department_id'].append(int(key))
-            report['number_of_orders'].append(self.output_table[key]['number_of_orders'])
-            report['number_of_first_orders'].append(self.output_table[key]['number_of_first_orders'])
-            report['percentage'].append(self.output_table[key]['percentage'])
+            report['number_of_orders'].append(report_dict[key]['number_of_orders'])
+            report['number_of_first_orders'].append(report_dict[key]['number_of_first_orders'])
+            report['percentage'].append(report_dict[key]['percentage'])
     
         return report
                     
@@ -163,25 +176,30 @@ class Analytics:
         return report_array
                 
     def create_ouput_file(self, report_array, outfile):
-        '''takes required report list: saves into a csv file at outfile.'''
-        with open(outfile, mode='w') as file:
-            writer = csv.DictWriter(file, fieldnames=['department_id', 'number_of_orders', 
+        '''takes required sorted report array: writes into a csv file.'''
+        with open(outfile, 'w', newline='') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=['department_id', 'number_of_orders', 
                                                           'number_of_first_orders', 'percentage'])
             writer.writeheader()
             for row in report_array:
-                writer.writerow({'department_id': row[0], 'number_of_orders': row[1], 'number_of_first_orders': row[2], 'percentage': row[3]})
-        file.close()
+                writer.writerow({
+                                    'department_id': row[0], 
+                                    'number_of_orders': row[1], 
+                                    'number_of_first_orders': row[2], 
+                                    'percentage': row[3]
+                                })
+        csv_file.close()
 
 
 # running the data preparation and analytics
-def main(order_products_path, products_path, outfile):
+def main():
     # data preparation
     data = DataPrep(order_products_path, products_path)
     # load both the data files
     data.load_order_product()
     data.load_products()
     # combining the input data into a single table
-    table = data.combine_inputs()
+    table = data.join_inputs()
 
     # analytics and creating report
     analyse = Analytics(table)
@@ -192,4 +210,4 @@ def main(order_products_path, products_path, outfile):
 
 
 if __name__ == "__main__":
-    main(order_products_path, products_path, outfile)
+    main()
