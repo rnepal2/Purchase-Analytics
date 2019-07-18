@@ -85,7 +85,7 @@ department_id,number_of_orders,number_of_first_orders,percentage
 
 ## Solution
 
-In this solution to the problem mentioned above, python dictionary data structure is used. The department wise counting is achieved using  dictionary of dictionaries. This solution works at the amortized time complexity of O(n). For the sorting of the result with department_id, we use bubble sort of complexity O(n$^2$). For the large number of departments, this can be improved with merge sort.  
+In this solution to the problem mentioned above, python dictionary data structure is used. The department wise counting is achieved using  dictionary of dictionaries. This solution works at the amortized time complexity of O(n). For the sorting of the result with department_id, we use bubble sort of complexity O($`n^2`$). For the large number of departments, this can be improved with merge sort.  
 
 ## Run
 
