@@ -83,6 +83,9 @@ department_id,number_of_orders,number_of_first_orders,percentage
 - A `department_id` should be listed only if `number_of_orders` is greater than `0`
 - `percentage` should be rounded to the second decimal
 
+## Solution
+
+In this solution to the problem mentioned above, python dictionary data structure is used. The department wise counting is achieved using  dictionary of dictionaries. This solution works at the amortized time complexity of O(n). For the sorting of the result with department_id, we use bubble sort of complexity O(n$^2$). For the large number of departments, this can be improved with merge sort.  
 
 ## Run
 
@@ -97,7 +100,7 @@ Also, unit tests can be run with:
 ### Submitted By
 Rabindra Nepal
 
-*Email:nepalrabindra9@gmail.com*
+*Email: nepalrabindra9@gmail.com*
 
 
 
