@@ -1,6 +1,6 @@
 # Purchase-Analytics
 
-This project is done as a part of the *Insight Data Engineering* coding challenge. 
+This project is done as a part of the *Insight Data Engineering* coding challenge which led me to the selection for fellowship.
 
 ## Problem
 Here, we use the [Instacart dataset](https://www.instacart.com/datasets/grocery-shopping-2017) containing 3 million Instacart orders.
